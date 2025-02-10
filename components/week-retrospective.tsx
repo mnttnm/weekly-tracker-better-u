@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { nanoid } from 'nanoid';
+import { Badge } from './ui/badge';
 
 const FREQUENCY_OPTIONS = [
   { value: 'daily', label: 'Daily' },
@@ -141,9 +142,7 @@ export function WeekRetrospective({
             {tasksForCurrentWeek.map((task) => (
               <div key={task.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                 <span className="handwritten text-lg">{task.description}</span>
-                <span className="text-sm text-muted-foreground px-2 py-1 bg-muted/20 rounded-full">
-                  {task.frequency}
-                </span>
+                <Badge variant="outline">{task.frequency}</Badge>
               </div>
             ))}
           </div>
@@ -278,7 +277,7 @@ export function WeekRetrospective({
                 >
                   <span className="handwritten text-base sm:text-2xl line-clamp-2">{task.description}</span>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs sm:text-sm text-muted-foreground">{task.frequency}</span>
+                    <Badge variant="secondary">{task.frequency}</Badge>
                     {weekData.week === currentWeek && (
                       <>
                         {/* Desktop remove button (hover) */}
