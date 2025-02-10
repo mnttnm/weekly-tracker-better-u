@@ -15,8 +15,9 @@ import {
   ChevronUp} from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { useWeeklyData } from '@/hooks/use-weekly-data';
-import { getCurrentWeek, getWeekDateRange } from '@/lib/utils';
+import { getCurrentWeek, getWeekDateRange, type WeekStartDay } from '@/lib/utils';
 import { useWeekSettings } from '@/hooks/use-week-settings';
+import { WelcomeDialog } from '@/components/welcome-dialog';
 
 type FrequencyType = 'daily' | 'once' | 'twice' | 'thrice' | 'four' | 'five' | 'six' | 'alt';
 
@@ -39,15 +40,22 @@ export default function Home() {
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [userName, setUserName] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
+  const [isFirstVisit, setIsFirstVisit] = useState(true);
   
   const { weekData, isLoading, getWeekData, updateWeekData } = useWeeklyData();
   const currentWeekData = getWeekData(selectedWeek);
 
-  // Load username from localStorage on mount
+  // Load username and first visit status from localStorage on mount
   useEffect(() => {
     const savedName = localStorage.getItem('weeklyTrackerUser');
+    const hasVisited = localStorage.getItem('weeklyTrackerHasVisited');
+
     if (savedName) {
       setUserName(savedName);
+    }
+
+    if (hasVisited) {
+      setIsFirstVisit(false);
     }
   }, []);
 
@@ -57,6 +65,13 @@ export default function Home() {
       localStorage.setItem('weeklyTrackerUser', userName);
     }
   }, [userName]);
+
+  const handleWelcomeComplete = (name: string, startDay: WeekStartDay) => {
+    setUserName(name);
+    updateWeekStartDay(startDay);
+    setIsFirstVisit(false);
+    localStorage.setItem('weeklyTrackerHasVisited', 'true');
+  };
 
   const handleDownloadScreenshot = async () => {
     const element = document.getElementById('week-content');
@@ -101,6 +116,9 @@ export default function Home() {
 
   return (
     <main className="container mx-auto px-4 py-6 max-w-7xl">
+      {isFirstVisit && (
+        <WelcomeDialog onComplete={handleWelcomeComplete} />
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-2">
           <h1 className="text-xl font-semibold flex items-center">
