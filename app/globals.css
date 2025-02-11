@@ -95,29 +95,133 @@ body {
 /* Mobile optimizations */
 @media (max-width: 640px) {
   .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    @apply px-3;
   }
 
+  /* Card styles */
+  .bg-white {
+    padding: 1rem !important;
+    border-radius: 0.5rem;
+  }
+
+  /* Input and button sizes */
   input, button {
-    height: 3rem;
+    height: 2.5rem;
   }
 
+  button[size="sm"] {
+    height: 2.25rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  button[size="icon"] {
+    height: 2.25rem;
+    width: 2.25rem;
+    padding: 0;
+  }
+
+  /* Typography */
   .text-2xl {
-    font-size: 1.5rem;
-    line-height: 2rem;
+    font-size: 1.25rem;
+    line-height: 1.75rem;
   }
 
+  .text-xl {
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+  }
+
+  /* Spacing */
   .space-y-6 > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 1.25rem;
-  }
-
-  .p-6 {
-    padding: 1.25rem;
+    margin-top: 1rem;
   }
 
   .gap-6 {
-    gap: 1.25rem;
+    gap: 1rem;
+  }
+
+  .p-6 {
+    padding: 1rem;
+  }
+
+  /* Task input layout */
+  .task-input-group {
+    @apply flex flex-col gap-2 w-full;
+  }
+
+  .frequency-group {
+    @apply flex gap-2;
+  }
+
+  .frequency-group > * {
+    @apply flex-1;
+  }
+
+  .frequency-group button {
+    @apply flex-none;
+  }
+
+  /* Task list */
+  .task-list {
+    width: 100%;
+  }
+
+  .task-list .handwritten {
+    font-size: 1rem;
+  }
+
+  /* Badges and icons */
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  /* Header specific */
+  h2.text-2xl {
+    font-size: 1.25rem;
+    line-height: 1.5;
+  }
+
+  h2 .text-muted-foreground {
+    display: block;
+    font-size: 0.875rem;
+  }
+
+  /* Remove duplicate jump to current week button */
+  .retrospective-section .jump-to-current {
+    display: none;
+  }
+
+  /* Task card full width */
+  .tasks-this-week {
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0.5rem !important;
+  }
+
+  /* Better task spacing */
+  .task-item {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  /* Improved input styles */
+  input.handwritten {
+    font-size: 1rem !important;
+    height: 2.5rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Better select sizing */
+  .select-trigger {
+    height: 2.5rem;
+    padding: 0.5rem 0.75rem;
   }
 }
 
@@ -128,11 +232,10 @@ body {
 
 /* Screenshot mode styles */
 .screenshot-mode {
-  @apply bg-white p-8 rounded-xl;
+  @apply bg-white p-8 rounded-xl space-y-8;
   
-  /* Header styles */
   .screenshot-header {
-    @apply border-b pb-4 mb-6;
+    @apply border-b pb-6 mb-6;
     
     h2 {
       @apply text-2xl font-semibold text-primary;
@@ -143,69 +246,134 @@ body {
     }
   }
 
-  /* Content sections */
   .screenshot-section {
-    @apply mb-8 last:mb-0;
+    @apply mb-8 last:mb-0 bg-card p-6 rounded-lg border shadow-sm;
     
     h3 {
-      @apply text-lg font-medium mb-4 flex items-center gap-2 text-muted-foreground;
-    }
-
-    .section-content {
-      @apply bg-muted/20 rounded-lg p-4;
+      @apply text-lg font-medium mb-4 flex items-center gap-2 text-card-foreground;
     }
   }
 
-  /* Tripti Index display */
-  .tripti-display {
-    @apply flex items-center gap-3 bg-primary/10 p-4 rounded-lg;
+  /* Empty states */
+  .empty-state {
+    @apply bg-muted/30 p-4 rounded-lg text-center text-muted-foreground;
     
-    .rating {
-      @apply text-2xl font-bold text-primary;
-    }
-    
-    .label {
-      @apply text-muted-foreground;
+    p {
+      @apply text-base;
     }
   }
 
-  /* Lists */
-  .screenshot-list {
-    @apply space-y-2;
-    
-    .list-item {
-      @apply flex items-center gap-3 p-3 bg-white/80 rounded-lg;
+  /* Tripti Index section */
+  .tripti-index {
+    @apply flex flex-col gap-4 p-6 bg-muted/30 rounded-lg;
+
+    .section-title {
+      @apply text-lg font-medium flex items-center gap-2;
+    }
+
+    .rating-display {
+      @apply flex flex-col gap-3;
+    }
+
+    .stars {
+      @apply flex gap-2;
+    }
+
+    .tripti-star {
+      @apply w-10 h-10 flex items-center justify-center;
+
+      svg {
+        @apply w-8 h-8;
+      }
+
+      &.filled svg {
+        @apply text-primary fill-current;
+      }
+    }
+
+    .rating-label {
+      @apply text-lg font-medium;
       
-      .icon {
-        @apply opacity-70;
+      .value {
+        @apply text-primary;
       }
       
-      .text {
-        @apply text-lg;
+      .label {
+        @apply text-muted-foreground ml-2;
       }
     }
   }
 
-  /* Task specific styles */
-  .task-item {
-    @apply flex items-center justify-between p-3 bg-white/80 rounded-lg;
-    
-    .frequency {
-      @apply text-sm text-muted-foreground px-2 py-1 bg-muted/30 rounded-full;
+  /* Task and feedback text */
+  .task-item .handwritten,
+  .feedback-item .handwritten,
+  .task-content {
+    @apply text-lg leading-relaxed;
+  }
+
+  /* Feedback sections */
+  .feedback-section {
+    @apply space-y-3;
+
+    .section-title {
+      @apply text-lg font-medium flex items-center gap-2;
+    }
+
+    .feedback-item {
+      @apply bg-muted/30 p-4 rounded-lg;
+    }
+  }
+
+  /* Task sections */
+  .tasks-section {
+    @apply space-y-4;
+
+    .section-title {
+      @apply text-lg font-medium flex items-center gap-2;
+    }
+
+    .task-list {
+      @apply space-y-3;
+    }
+
+    .task-item {
+      @apply bg-muted/30 p-4 rounded-lg flex items-center justify-between;
+
+      .task-content {
+        @apply flex-1;
+      }
+
+      .task-frequency {
+        @apply text-sm text-muted-foreground bg-background px-2 py-1 rounded;
+      }
     }
   }
 
   /* Hide all interactive elements */
-  button:not(.keep-in-screenshot),
+  .task-input-group,
+  .task-actions,
+  button:not(.tripti-star),
   input,
   select,
   .hide-in-screenshot {
-    @apply hidden;
+    @apply hidden !important;
   }
 
-  /* Ensure icons are visible */
-  svg {
-    @apply !opacity-100;
+  /* Show only data elements */
+  .task-content,
+  .screenshot-only {
+    @apply block;
+  }
+
+  /* Remove scrolling and height limits */
+  .task-list,
+  .max-h-\[300px\],
+  .overflow-hidden,
+  .overflow-y-auto {
+    max-height: none !important;
+    overflow: visible !important;
+    padding-right: 0 !important;
+    margin-right: 0 !important;
   }
 }
 

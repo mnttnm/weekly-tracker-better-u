@@ -152,7 +152,7 @@ export function YearHeatmap({ data, onWeekSelect, currentWeek, selectedWeek, wee
       </div>
       
       {/* Legend */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t">
+      <div className="flex items-center gap-3 pt-4 border-t">
         {[1, 2, 3, 4, 5].map((value) => (
           <div key={`legend-${value}`} className="flex items-center gap-2">
             <div

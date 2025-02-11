@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { nanoid } from "nanoid"
 
 type FrequencyType = 'daily' | 'once' | 'twice' | 'thrice' | 'four' | 'five' | 'six' | 'alt';
 
@@ -10,6 +11,11 @@ export interface WeekData {
   positives: string[];
   negatives: string[];
   nextWeekPlans: {
+    id: string;
+    description: string;
+    frequency: FrequencyType;
+  }[];
+  currentWeekTasks: {
     id: string;
     description: string;
     frequency: FrequencyType;
@@ -32,7 +38,11 @@ export function useWeeklyData() {
           nextWeekPlans: week.nextWeekPlans.map(task => ({
             ...task,
             frequency: task.frequency as FrequencyType
-          }))
+          })),
+          currentWeekTasks: week.currentWeekTasks?.map(task => ({
+            ...task,
+            frequency: task.frequency as FrequencyType
+          })) || []
         }));
         setWeekData(migratedData);
       }
@@ -55,25 +65,82 @@ export function useWeeklyData() {
   }, [weekData, isLoading]);
 
   const getWeekData = useCallback((weekNumber: number) => {
-    return weekData.find((data) => data.week === weekNumber) || {
-      week: weekNumber,
-      triptiIndex: 0,
-      positives: [],
-      negatives: [],
-      nextWeekPlans: [],
-    };
+    const weekDataItem = weekData.find((data) => data.week === weekNumber);
+
+    if (!weekDataItem) {
+      // For a new week, check if there were tasks planned for it in the previous week
+      const previousWeek = weekData.find((data) => data.week === weekNumber - 1);
+      const plannedTasks = previousWeek?.nextWeekPlans || [];
+
+      return {
+        week: weekNumber,
+        triptiIndex: 0,
+        positives: [],
+        negatives: [],
+        nextWeekPlans: [],
+        currentWeekTasks: plannedTasks.map(task => ({
+          ...task,
+          id: nanoid() // Generate new IDs for copied tasks
+        })),
+      };
+    }
+
+    return weekDataItem;
   }, [weekData]);
 
   const updateWeekData = useCallback((weekNumber: number, data: Partial<WeekData>) => {
     setWeekData(prevData => {
       const currentData = getWeekData(weekNumber);
       const newData = { ...currentData, ...data };
-      const index = prevData.findIndex(d => d.week === weekNumber);
+      let updatedData = [...prevData];
+      const index = updatedData.findIndex(d => d.week === weekNumber);
+
+      // If we're updating currentWeekTasks, sync with previous week's nextWeekPlans
+      if (data.currentWeekTasks) {
+        const prevWeekIndex = updatedData.findIndex(d => d.week === weekNumber - 1);
+        if (prevWeekIndex >= 0) {
+          updatedData = updatedData.map((d, i) => {
+            if (i === prevWeekIndex) {
+              return {
+                ...d,
+                nextWeekPlans: data.currentWeekTasks!
+              };
+            }
+            return d;
+          });
+        }
+      }
+
+      // If we're updating nextWeekPlans, sync with next week's currentWeekTasks
+      if (data.nextWeekPlans) {
+        const nextWeekIndex = updatedData.findIndex(d => d.week === weekNumber + 1);
+        if (nextWeekIndex >= 0) {
+          updatedData = updatedData.map((d, i) => {
+            if (i === nextWeekIndex) {
+              return {
+                ...d,
+                currentWeekTasks: data.nextWeekPlans!
+              };
+            }
+            return d;
+          });
+        } else {
+          // If next week doesn't exist yet, create it
+          updatedData.push({
+            week: weekNumber + 1,
+            triptiIndex: 0,
+            positives: [],
+            negatives: [],
+            nextWeekPlans: [],
+            currentWeekTasks: data.nextWeekPlans!
+          });
+        }
+      }
       
       if (index >= 0) {
-        return prevData.map(d => d.week === weekNumber ? newData : d);
+        return updatedData.map(d => d.week === weekNumber ? newData : d);
       } else {
-        return [...prevData, newData];
+        return [...updatedData, newData];
       }
     });
   }, [getWeekData]);
