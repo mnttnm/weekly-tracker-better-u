@@ -97,10 +97,12 @@ export function useWeeklyData() {
 
       // If we're updating currentWeekTasks, sync with previous week's nextWeekPlans
       if (data.currentWeekTasks) {
+        // First ensure previous week exists
         const prevWeekIndex = updatedData.findIndex(d => d.week === weekNumber - 1);
         if (prevWeekIndex >= 0) {
-          updatedData = updatedData.map((d, i) => {
-            if (i === prevWeekIndex) {
+          // Previous week exists, update its nextWeekPlans
+          updatedData = updatedData.map(d => {
+            if (d.week === weekNumber - 1) {
               return {
                 ...d,
                 nextWeekPlans: data.currentWeekTasks!
@@ -108,15 +110,27 @@ export function useWeeklyData() {
             }
             return d;
           });
+        } else {
+          // Previous week doesn't exist, create it
+          updatedData.push({
+            week: weekNumber - 1,
+            triptiIndex: 0,
+            positives: [],
+            negatives: [],
+            nextWeekPlans: data.currentWeekTasks!,
+            currentWeekTasks: []
+          });
         }
       }
 
       // If we're updating nextWeekPlans, sync with next week's currentWeekTasks
       if (data.nextWeekPlans) {
+        // First ensure next week exists
         const nextWeekIndex = updatedData.findIndex(d => d.week === weekNumber + 1);
         if (nextWeekIndex >= 0) {
-          updatedData = updatedData.map((d, i) => {
-            if (i === nextWeekIndex) {
+          // Next week exists, update its currentWeekTasks
+          updatedData = updatedData.map(d => {
+            if (d.week === weekNumber + 1) {
               return {
                 ...d,
                 currentWeekTasks: data.nextWeekPlans!
@@ -125,7 +139,7 @@ export function useWeeklyData() {
             return d;
           });
         } else {
-          // If next week doesn't exist yet, create it
+          // Next week doesn't exist, create it
           updatedData.push({
             week: weekNumber + 1,
             triptiIndex: 0,
@@ -137,11 +151,15 @@ export function useWeeklyData() {
         }
       }
       
+      // Finally, update or add the current week's data
       if (index >= 0) {
-        return updatedData.map(d => d.week === weekNumber ? newData : d);
+        updatedData = updatedData.map(d => d.week === weekNumber ? newData : d);
       } else {
-        return [...updatedData, newData];
+        updatedData.push(newData);
       }
+
+      // Sort weeks in ascending order
+      return updatedData.sort((a, b) => a.week - b.week);
     });
   }, [getWeekData]);
 
