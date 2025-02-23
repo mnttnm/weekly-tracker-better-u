@@ -18,6 +18,7 @@ import { useWeeklyData } from '@/hooks/use-weekly-data';
 import { getCurrentWeek, getWeekDateRange, type WeekStartDay } from '@/lib/utils';
 import { useWeekSettings } from '@/hooks/use-week-settings';
 import { WelcomeDialog } from '@/components/welcome-dialog';
+import { weeksToDays } from 'date-fns';
 
 const getTriptiLabel = (value: number) => {
   const labels = {
@@ -73,179 +74,276 @@ export default function Home() {
   const handleDownloadScreenshot = async () => {
     const element = document.getElementById('week-content');
     if (element) {
-      // Create a new container for the screenshot
-      const screenshotContainer = document.createElement('div');
-      screenshotContainer.className = 'screenshot-mode';
-      
-      // Create header
-      const header = document.createElement('div');
-      header.className = 'screenshot-header';
-      header.innerHTML = `
-        <h2>Week ${selectedWeek} Summary ${userName ? `for ${userName}` : ''}</h2>
-        <div class="date-range">${getWeekDateRange(selectedWeek, weekStartDay)}</div>
-      `;
-      screenshotContainer.appendChild(header);
+      try {
+        // Wait for fonts to load
+        await document.fonts.ready;
 
-      // Create content container
-      const screenshotContent = document.createElement('div');
-      screenshotContent.className = 'space-y-8';
+        // Create a new container for the screenshot
+        const screenshotContainer = document.createElement('div');
+        screenshotContainer.className = 'screenshot-mode';
+        screenshotContainer.style.width = '1200px';
+        screenshotContainer.style.backgroundColor = '#ffffff';
+        screenshotContainer.style.position = 'relative'; // Ensure proper layout
+        screenshotContainer.style.overflow = 'hidden'; // Prevent overflow issues
 
-      // Add Tripti Index section
-      const triptiHtml = `
-        <div class="tripti-index">
-          <div class="section-title">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-            Tripti Index
-          </div>
-          ${currentWeekData.triptiIndex > 0 ? `
-            <div class="rating-display">
-              <div class="stars">
-                ${Array.from({ length: 5 }, (_, i) => `
-                  <div class="tripti-star ${i < currentWeekData.triptiIndex ? 'filled' : ''}">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                    </svg>
-                  </div>
-                `).join('')}
-              </div>
-              <div class="rating-label">
-                <span class="value">${currentWeekData.triptiIndex}</span>
-                <span class="label">${getTriptiLabel(currentWeekData.triptiIndex)}</span>
-              </div>
+        // Create header
+        const header = document.createElement('div');
+        header.className = 'screenshot-header';
+        header.innerHTML = `
+          <h2 style="font-size: 2rem; font-weight: 600; color: #1a1a1a; margin-bottom: 8px; white-space: normal;">${'Week ' + selectedWeek + ' Summary' + (userName ? ' for ' + userName : '')}</h2>
+          <div style="font-size: 1.25rem; color: #64748b; white-space: normal;">${getWeekDateRange(selectedWeek, weekStartDay)}</div>
+        `;
+        screenshotContainer.appendChild(header);
+
+        // Create content container with fixed width for consistency
+        const screenshotContent = document.createElement('div');
+        screenshotContent.className = 'space-y-8';
+        screenshotContent.style.padding = '24px';
+        screenshotContent.style.width = '1200px'; // Fixed width for consistent rendering
+
+        // Add Tripti Index section
+        const triptiHtml = `
+          <div class="tripti-index" style="background: #f8fafc; padding: 24px; border-radius: 12px; margin-bottom: 32px;">
+            <div class="section-title" style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              <div style="font-size: 1.5rem; font-weight: 600; white-space: normal;">Tripti Index</div>
             </div>
-          ` : `
-            <div class="empty-state">
-              <p>No rating provided for this week</p>
-            </div>
-          `}
-        </div>
-      `;
-      screenshotContent.innerHTML += triptiHtml;
-
-      // Add current week's tasks section
-      const tasksHtml = `
-        <div class="tasks-section">
-          <div class="section-title">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 7h18M3 12h18M3 17h18"/>
-            </svg>
-            Tasks for This Week
+            ${currentWeekData.triptiIndex > 0 ? `
+              <div class="rating-display">
+                <div class="stars" style="display: flex; gap: 12px; margin: 24px 0;">
+                  ${Array.from({ length: 5 }, (_, i) => `
+                    <div class="tripti-star" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36"
+                           fill="${i < currentWeekData.triptiIndex ? '#2563eb' : 'none'}" 
+                           stroke="${i < currentWeekData.triptiIndex ? '#2563eb' : 'currentColor'}" 
+                           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                      </svg>
+                    </div>
+                  `).join('')}
+                </div>
+                <div class="rating-label" style="margin-top: 16px;">
+                  <span class="value" style="font-size: 1.5rem; font-weight: 600; color: #2563eb;">${currentWeekData.triptiIndex}</span>
+                  <span class="label" style="font-size: 1.25rem; color: #64748b; margin-left: 12px;">${getTriptiLabel(currentWeekData.triptiIndex)}</span>
+                </div>
+              </div>
+            ` : `
+              <div class="empty-state" style="text-align: center; padding: 32px; background: rgba(0,0,0,0.05); border-radius: 12px; margin-top: 16px;">
+                <p style="color: #64748b; font-size: 1.25rem;">No rating provided for this week</p>
+              </div>
+            `}
           </div>
-          <div class="task-list">
-            ${currentWeekData.currentWeekTasks.length > 0 ?
+        `;
+        screenshotContent.innerHTML += triptiHtml;
+
+        // Add current week's tasks section
+        const tasksHtml = `
+          <div class="tasks-section" style="background: #f8fafc; padding: 12px; border-radius: 12px; margin-bottom: 32px;">
+            <div class="section-title" style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+                <path d="M3 7h18M3 12h18M3 17h18"/>
+              </svg>
+              <span style="font-size: 1.5rem; font-weight: 600; white-space: normal;">Tasks for This Week</span>
+            </div>
+            <div class="task-list" style="display: flex; flex-direction: column; gap: 16px;">
+              ${currentWeekData.currentWeekTasks.length > 0 ?
           currentWeekData.currentWeekTasks.map(task => `
-                <div class="task-item">
-                  <div class="task-content handwritten">${task.description}</div>
-                  <div class="task-frequency">${task.frequency}</div>
-                </div>
-              `).join('') : `
-                <div class="empty-state">
-                  <p>No tasks planned for this week</p>
-                </div>
-              `}
+                  <div class="task-item" style="background: rgba(0,0,0,0.05); padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="task-content handwritten" style="font-size: 1.75rem; line-height: 1.5; flex: 1; margin-right: 24px;">${task.description}</div>
+                    <div class="task-frequency" style="font-size: 1.125rem; color: #64748b; background: white; padding: 4px 16px; border-radius: 16px;  display: inline-flex; align-items: center;">${task.frequency}</div>
+                  </div>
+                `).join('') : `
+                  <div class="empty-state" style="text-align: center; padding: 32px; background: rgba(0,0,0,0.05); border-radius: 12px;">
+                    <p style="color: #64748b; font-size: 1.25rem;">No tasks planned for this week</p>
+                  </div>
+                `}
+            </div>
           </div>
-        </div>
-      `;
-      screenshotContent.innerHTML += tasksHtml;
+        `;
+        screenshotContent.innerHTML += tasksHtml;
 
-      // Add positives section
-      const positivesHtml = `
-        <div class="feedback-section">
-          <div class="section-title">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
-            </svg>
-            Positives
-          </div>
-          ${currentWeekData.positives.length > 0 ?
+        // Add positives section
+        const positivesHtml = `
+          <div class="feedback-section" style="background: #f0fdf4; padding: 24px; border-radius: 12px; margin-bottom: 32px;">
+            <div class="section-title" style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+              </svg>
+              <span style="font-size: 1.5rem; font-weight: 600; white-space: normal;">Positives</span>
+            </div>
+            ${currentWeekData.positives.length > 0 ?
           currentWeekData.positives.map(text => `
-              <div class="feedback-item handwritten">${text}</div>
-            `).join('') : `
-              <div class="empty-state">
-                <p>No positives recorded for this week</p>
-              </div>
-            `}
-        </div>
-      `;
-      screenshotContent.innerHTML += positivesHtml;
-
-      // Add negatives section
-      const negativesHtml = `
-        <div class="feedback-section">
-          <div class="section-title">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
-            </svg>
-            Areas for Improvement
-          </div>
-          ${currentWeekData.negatives.length > 0 ?
-          currentWeekData.negatives.map(text => `
-              <div class="feedback-item handwritten">${text}</div>
-            `).join('') : `
-              <div class="empty-state">
-                <p>No areas for improvement recorded for this week</p>
-              </div>
-            `}
-        </div>
-      `;
-      screenshotContent.innerHTML += negativesHtml;
-
-      // Add next week's planned tasks section
-      const nextWeekTasksHtml = `
-        <div class="tasks-section">
-          <div class="section-title">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
-              <line x1="4" y1="22" x2="4" y2="15"/>
-            </svg>
-            Next Week Planning
-          </div>
-          <div class="task-list">
-            ${currentWeekData.nextWeekPlans.length > 0 ?
-          currentWeekData.nextWeekPlans.map(task => `
-                <div class="task-item">
-                  <div class="task-content handwritten">${task.description}</div>
-                  <div class="task-frequency">${task.frequency}</div>
+                <div class="feedback-item handwritten" style="background: rgba(34, 197, 94, 0.1); padding: 16px 24px; border-radius: 12px; margin-bottom: 16px;">
+                  <div style="font-size: 1.75rem; line-height: 1.5; color: #166534; overflow-wrap: break-word; word-break: break-word;">${text}</div>
                 </div>
               `).join('') : `
-                <div class="empty-state">
-                  <p>No tasks planned for next week yet</p>
+                <div class="empty-state" style="text-align: center; padding: 32px; background: rgba(34, 197, 94, 0.1); border-radius: 12px;">
+                  <p style="color: #166534; font-size: 1.25rem;">No positives recorded for this week</p>
                 </div>
               `}
           </div>
-        </div>
-      `;
-      screenshotContent.innerHTML += nextWeekTasksHtml;
+        `;
+        screenshotContent.innerHTML += positivesHtml;
 
-      // Add content to container
-      screenshotContainer.appendChild(screenshotContent);
+        // Add negatives section
+        const negativesHtml = `
+          <div class="feedback-section" style="background: #fef2f2; padding: 24px; border-radius: 12px; margin-bottom: 32px;">
+            <div class="section-title" style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+                <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
+              </svg>
+              <span style="font-size: 1.5rem; font-weight: 600; white-space: normal;">Areas for Improvement</span>
+            </div>
+            ${currentWeekData.negatives.length > 0 ?
+          currentWeekData.negatives.map(text => `
+                <div class="feedback-item handwritten" style="background: rgba(239, 68, 68, 0.1); padding: 16px 24px; border-radius: 12px; margin-bottom: 16px;">
+                  <div style="font-size: 1.75rem; line-height: 1.5; color: #991b1b; overflow-wrap: break-word; word-break: break-word;">${text}</div>
+                </div>
+              `).join('') : `
+                <div class="empty-state" style="text-align: center; padding: 32px; background: rgba(239, 68, 68, 0.1); border-radius: 12px;">
+                  <p style="color: #991b1b; font-size: 1.25rem;">No areas for improvement recorded for this week</p>
+                </div>
+              `}
+          </div>
+        `;
+        screenshotContent.innerHTML += negativesHtml;
 
-      // Save original content and replace with screenshot content
-      const originalContent = element.innerHTML;
-      element.innerHTML = '';
-      element.appendChild(screenshotContainer);
+        // Add next week's planned tasks section
+        const nextWeekTasksHtml = `
+          <div class="tasks-section" style="background: #f8fafc; padding: 24px; border-radius: 12px; margin-bottom: 32px;">
+            <div class="section-title" style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+                <line x1="4" y1="22" x2="4" y2="15"/>
+              </svg>
+              <span style="font-size: 1.5rem; font-weight: 600; white-space: normal;">Next Week Planning</span>
+            </div>
+            <div class="task-list" style="display: flex; flex-direction: column; gap: 16px;">
+              ${currentWeekData.nextWeekPlans.length > 0 ?
+          currentWeekData.nextWeekPlans.map(task => `
+                  <div class="task-item" style="background: rgba(0,0,0,0.05); padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="task-content handwritten" style="font-size: 1.75rem; line-height: 1.5; flex: 1; margin-right: 24px;">${task.description}</div>
+                    <div class="task-frequency" style="font-size: 1.125rem; color: #64748b; background: white; padding: 8px 16px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; display: inline-block;">${task.frequency}</div>
+                  </div>
+                `).join('') : `
+                  <div class="empty-state" style="text-align: center; padding: 32px; background: rgba(0,0,0,0.05); border-radius: 12px;">
+                    <p style="color: #64748b; font-size: 1.25rem;">No tasks planned for next week yet</p>
+                  </div>
+                `}
+            </div>
+          </div>
+        `;
+        screenshotContent.innerHTML += nextWeekTasksHtml;
 
-      // Capture the screenshot
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
-      });
-      
-      // Restore original content
-      element.innerHTML = originalContent;
-      
-      // Download the image
-      const data = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = data;
-      link.download = `week-${selectedWeek}-summary.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+        // Add content to container
+        screenshotContainer.appendChild(screenshotContent);
+
+        // Create a temporary container
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.top = '0';
+        tempContainer.style.width = '1200px';
+        tempContainer.style.height = 'auto';
+        tempContainer.style.transform = 'none'; // Prevent transform issues
+        tempContainer.style.webkitTransform = 'none'; // Safari specific
+        document.body.appendChild(tempContainer);
+        tempContainer.appendChild(screenshotContainer);
+
+        // Force layout calculation
+        tempContainer.getBoundingClientRect();
+        screenshotContainer.getBoundingClientRect();
+
+        // Wait for fonts and layout
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Get pixel ratio for retina displays
+        const pixelRatio = window.devicePixelRatio || 1;
+
+        // Capture the screenshot with improved configuration
+        const canvas = await html2canvas(screenshotContainer, {
+          scale: pixelRatio * 2, // Account for retina displays
+          useCORS: true,
+          logging: true,
+          backgroundColor: '#ffffff',
+          allowTaint: true,
+          removeContainer: false,
+          width: 1200,
+          height: screenshotContainer.offsetHeight,
+          x: 0,
+          y: 0,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: 1200,
+          windowHeight: screenshotContainer.offsetHeight,
+          foreignObjectRendering: false, // Disable for better Safari support
+          onclone: (clonedDoc) => {
+            // Add font to cloned document
+            const style = clonedDoc.createElement('style');
+            style.textContent = `
+              @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&display=swap');
+              .handwritten {
+                font-family: 'Caveat Variable', cursive !important;
+                font-size: 1.75rem !important;
+                line-height: 1.5 !important;
+              }
+            `;
+            clonedDoc.head.appendChild(style);
+
+            // Force all SVGs to render properly
+            const svgs = clonedDoc.getElementsByTagName('svg');
+            Array.from(svgs).forEach(svg => {
+              svg.setAttribute('width', svg.getAttribute('width') || '24');
+              svg.setAttribute('height', svg.getAttribute('height') || '24');
+              svg.style.minWidth = '24px';
+              svg.style.minHeight = '24px';
+            });
+
+            // Force immediate font loading
+            return document.fonts.ready;
+          }
+        });
+
+        // Create a new canvas with exact dimensions
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = canvas.width;
+        finalCanvas.height = canvas.height;
+        const ctx = finalCanvas.getContext('2d');
+
+        if (ctx) {
+          // Enable font smoothing
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+
+          // Draw with white background first
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+          // Draw the captured content
+          ctx.drawImage(canvas, 0, 0);
+        }
+
+        // Download with maximum quality
+        const data = finalCanvas.toDataURL('image/png', 1.0);
+        const link = document.createElement('a');
+        link.href = data;
+        link.download = `weekly-reflection-${userName.replace(/ /g, '-').replace(/--+/g, '-')}-${getWeekDateRange(selectedWeek, weekStartDay).replace(/ /g, '-').replace(/--+/g, '-')}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+      } catch (error) {
+        console.error('Screenshot error:', error);
+        alert('There was an error generating the screenshot. Please try again.');
+      } finally {
+        // Cleanup
+        const tempContainer = document.querySelector('[style*="position: absolute"]');
+        if (tempContainer) {
+          document.body.removeChild(tempContainer);
+        }
+      }
     }
   };
 
